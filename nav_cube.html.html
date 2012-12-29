@@ -146,6 +146,40 @@
 
 
     function onDocumentMouseUp() {
+        var x = event.clientX;
+        var y = event.clientY;
+        if (x === clientClickX && y === clientClickY) {
+
+            var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1,
+                -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+            projector.unprojectVector(vector, camera);
+
+            var ray = new THREE.Ray(camera.position, vector.subSelf(camera.position).normalize());
+            var intersects = ray.intersectObject(cube);
+
+            if (intersects.length > 0) {
+
+                //console.log('object x:' + intersects[0].face.normal.x +
+                //'; y:'+intersects[0].face.normal.y +
+                //'; z:'+intersects[0].face.normal.z);
+                if (intersects[0].face.normal.x === 0 && intersects[0].face.normal.y === 0 &&
+                    intersects[0].face.normal.z === -1) {alert("B face click registered");
+                }
+                if (intersects[0].face.normal.x === 0 && intersects[0].face.normal.y === 0 &&
+                    intersects[0].face.normal.z === 1) {alert("F face click registered");
+                }
+                if (intersects[0].face.normal.x === 1 && intersects[0].face.normal.y === 0 &&
+                    intersects[0].face.normal.z === 0) {alert("R face click registered");
+                }
+                if (intersects[0].face.normal.x === -1 && intersects[0].face.normal.y === 0 &&
+                    intersects[0].face.normal.z === 0) {alert("L face click registered");
+                }
+                if (intersects[0].face.normal.x === 0 && intersects[0].face.normal.y === 1 &&
+                    intersects[0].face.normal.z === 0) {alert("U face click registered");
+                }
+            }
+        }
+
         document.removeEventListener('mousemove', onDocumentMouseMove, false);
         document.removeEventListener('mouseup', onDocumentMouseUp, false);
         document.removeEventListener('mouseout', onDocumentMouseOut, false);
