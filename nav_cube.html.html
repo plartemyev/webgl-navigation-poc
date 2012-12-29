@@ -24,7 +24,7 @@
     var container, stats;
 
     var camera, scene, projector, renderer;
-    var cube, wireframeCube;
+    var cube, wireframeCube, exCube, hover_light;
 
     var targetRotation = 0;
     var targetRotationOnMouseDown = 0;
@@ -53,6 +53,9 @@
         camera.rotation.z = 0.477;
 
         scene = new THREE.Scene();
+        hover_light = new THREE.PointLight(0x32cd32, 0, 0);
+        hover_light.position.set(330, 450, 370);
+        scene.add(hover_light);
         scene.add(new THREE.AmbientLight(0xe0e0e0));
 
         if (Detector.webgl) {
@@ -88,10 +91,7 @@
             map: THREE.ImageUtils.loadTexture('textures/u.jpg'),
             transparent: true
         }));
-        materialsC.push(new THREE.MeshLambertMaterial({
-            color: 0xffffff,
-            transparent: true
-        }));
+        materialsC.push(new THREE.MeshBasicMaterial({visible: false}));  // Down side of the cube
         materialsC.push(new THREE.MeshLambertMaterial({
             color: 0xffffff,
             map: THREE.ImageUtils.loadTexture('textures/f.jpg'),
@@ -103,7 +103,7 @@
             transparent: true
         }));
 
-        for (i = 0; i < 6; i++) {
+        for (var i = 0; i < 6; i++) {
             materialsC[i].opacity = 0.6;
         }
 
@@ -122,9 +122,17 @@
         wireframeCube.rotation = cube.rotation;
         scene.add(wireframeCube);
 
+        var exCubeGeometry = new THREE.CubeGeometry(220, 220, 220, 1, 1, 1);
+        var exCubeMaterial = new THREE.MeshBasicMaterial({visible: false});
+        exCube = new THREE.Mesh(exCubeGeometry, exCubeMaterial);
+        exCube.position = cube.position;
+        exCube.rotation = cube.rotation;
+        scene.add(exCube);
+
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('touchstart', onDocumentTouchStart, false);
         document.addEventListener('touchmove', onDocumentTouchMove, false);
+        document.addEventListener('mousemove', hoverMove, false);
         window.addEventListener('resize', onWindowResize, false);
     }
 
@@ -134,6 +142,26 @@
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function hoverMove(event) {
+        var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1,
+            -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+        projector.unprojectVector(vector, camera);
+
+        var ray = new THREE.Ray(camera.position, vector.subSelf(camera.position).normalize());
+        var intersects = ray.intersectObject(exCube);
+
+        if (intersects.length > 0) {
+            var target = intersects[0].point;
+            //console.log( 'intersected coords: ' + target.z );
+
+            hover_light.intensity = 2;
+            hover_light.position = target;
+
+        } else {
+            hover_light.intensity = 0;
+        }
     }
 
     function onDocumentMouseDown(event) {
