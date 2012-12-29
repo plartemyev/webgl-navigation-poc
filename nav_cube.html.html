@@ -24,7 +24,7 @@
     var container, stats;
 
     var camera, scene, projector, renderer;
-    var cube;
+    var cube, wireframeCube;
 
     var targetRotation = 0;
     var targetRotationOnMouseDown = 0;
@@ -76,32 +76,36 @@
         materialsC.push(new THREE.MeshLambertMaterial({
             color: 0xffffff,
             map: THREE.ImageUtils.loadTexture('textures/r.jpg'),
-            transparent: false
+            transparent: true
         }));
         materialsC.push(new THREE.MeshLambertMaterial({
             color: 0xffffff,
             map: THREE.ImageUtils.loadTexture('textures/l.jpg'),
-            transparent: false
+            transparent: true
         }));
         materialsC.push(new THREE.MeshLambertMaterial({
             color: 0xffffff,
             map: THREE.ImageUtils.loadTexture('textures/u.jpg'),
-            transparent: false
+            transparent: true
         }));
         materialsC.push(new THREE.MeshLambertMaterial({
             color: 0xffffff,
-            transparent: false
+            transparent: true
         }));
         materialsC.push(new THREE.MeshLambertMaterial({
             color: 0xffffff,
             map: THREE.ImageUtils.loadTexture('textures/f.jpg'),
-            transparent: false
+            transparent: true
         }));
         materialsC.push(new THREE.MeshLambertMaterial({
             color: 0xffffff,
             map: THREE.ImageUtils.loadTexture('textures/b.jpg'),
-            transparent: false
+            transparent: true
         }));
+
+        for (i = 0; i < 6; i++) {
+            materialsC[i].opacity = 0.6;
+        }
 
         var cubeMaterial = new THREE.MeshFaceMaterial(materialsC);
 
@@ -110,6 +114,13 @@
         cube.position.y = 150;
         cube.rotation.y = 0.4;
         scene.add(cube);
+
+        var wireframeCubeGeometry = new THREE.CubeGeometry(200, 200, 200, 1, 1, 1);
+        var wireframeCubeMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0x000000});
+        wireframeCube = new THREE.Mesh(wireframeCubeGeometry, wireframeCubeMaterial);
+        wireframeCube.position = cube.position;
+        wireframeCube.rotation = cube.rotation;
+        scene.add(wireframeCube);
 
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('touchstart', onDocumentTouchStart, false);
