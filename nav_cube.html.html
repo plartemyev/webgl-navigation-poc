@@ -25,6 +25,8 @@
 
     var camera, scene, projector, renderer;
     var cube, wireframeCube, exCube, hover_light;
+    var particle_parameters, particle_hue, particle_size, particle_color, particle_geometry, particle_materials = [];
+    var particles;
 
     var targetRotation = 0;
     var targetRotationOnMouseDown = 0;
@@ -105,8 +107,8 @@
             transparent: true
         }));
 
-        for (var i = 0; i < 6; i++) {
-            materialsC[i].opacity = 0.6;
+        for (var m_i = 0; m_i < 6; m_i++) {
+            materialsC[m_i].opacity = 0.6;
         }
 
         var cubeMaterial = new THREE.MeshFaceMaterial(materialsC);
@@ -130,6 +132,32 @@
         exCube.position = cube.position;
         exCube.rotation = cube.rotation;
         scene.add(exCube);
+
+        particle_geometry = new THREE.Geometry();
+        for (var p = 0; p < 3000; p++) {
+            var vertex = new THREE.Vector3();
+            vertex.x = Math.random() * 2000 - 1000;
+            vertex.y = Math.random() * 2000 - 300;
+            vertex.z = Math.random() * 2000 - 10;
+            particle_geometry.vertices.push(vertex);
+        }
+        particle_parameters = [
+            [[1.0, 1.0, 1.0], 5], [[0.95, 1, 1], 4], [[0.90, 1, 1], 3], [[0.85, 1, 1], 2], [[0.80, 1, 1], 1]
+        ];
+        for (var pp = 0; pp < particle_parameters.length; pp++) {
+            particle_size = particle_parameters[pp][1];
+            particle_color = particle_parameters[pp][0];
+            particle_materials[pp] = new THREE.ParticleBasicMaterial({size: particle_size});
+            particle_materials[pp].color.setHSV(particle_color[0], particle_color[1], particle_color[2]);
+
+            // console.log('materials[i]: ' + pp + particle_materials[pp]);
+            particles = new THREE.ParticleSystem(particle_geometry, particle_materials[1]);
+            particles.rotation.x = Math.random() * 6;
+            particles.rotation.y = Math.random() * 6;
+            particles.rotation.z = Math.random() * 6;
+
+            scene.add(particles);
+        }
 
         document.addEventListener('mousedown', onDocumentMouseDown, false);
         document.addEventListener('touchstart', onDocumentTouchStart, false);
@@ -206,19 +234,24 @@
                 //'; y:'+intersects[0].face.normal.y +
                 //'; z:'+intersects[0].face.normal.z);
                 if (intersects[0].face.normal.x === 0 && intersects[0].face.normal.y === 0 &&
-                    intersects[0].face.normal.z === -1) {alert("B face click registered");
+                    intersects[0].face.normal.z === -1) {
+                    alert("B face click registered");
                 }
                 if (intersects[0].face.normal.x === 0 && intersects[0].face.normal.y === 0 &&
-                    intersects[0].face.normal.z === 1) {alert("F face click registered");
+                    intersects[0].face.normal.z === 1) {
+                    alert("F face click registered");
                 }
                 if (intersects[0].face.normal.x === 1 && intersects[0].face.normal.y === 0 &&
-                    intersects[0].face.normal.z === 0) {alert("R face click registered");
+                    intersects[0].face.normal.z === 0) {
+                    alert("R face click registered");
                 }
                 if (intersects[0].face.normal.x === -1 && intersects[0].face.normal.y === 0 &&
-                    intersects[0].face.normal.z === 0) {alert("L face click registered");
+                    intersects[0].face.normal.z === 0) {
+                    alert("L face click registered");
                 }
                 if (intersects[0].face.normal.x === 0 && intersects[0].face.normal.y === 1 &&
-                    intersects[0].face.normal.z === 0) {alert("U face click registered");
+                    intersects[0].face.normal.z === 0) {
+                    alert("U face click registered");
                 }
             }
         }
@@ -257,7 +290,7 @@
 
         idleTime++;
         var rotationPreserve = 0;
-        
+
         if (idleTime > 160 && idleTime < 310) {
             rotationPreserve = targetRotation;
             targetRotation += 0.002;
@@ -281,8 +314,27 @@
             targetRotation += 6;
             idleFramesCount = 0;
         }
-        
+
         cube.rotation.y += (targetRotation - cube.rotation.y) * 0.03;
+
+        var time = Date.now() * 0.00005;
+
+        for (var sc = 0; sc < scene.children.length; sc++) {
+            var object = scene.children[sc];
+
+            if (object instanceof THREE.ParticleSystem) {
+
+                object.rotation.y = time * (sc < 4 ? sc + 1 : -(sc + 1));
+            }
+        }
+
+        for (var pm = 0; pm < particle_materials.length; pm++) {
+            particle_color = particle_parameters[pm][0];
+
+            particle_hue = (360 * (particle_color[0] + time) % 360) / 360;
+            particle_materials[pm].color.setHSV(particle_hue, particle_color[1], particle_color[2]);
+        }
+
         renderer.render(scene, camera);
         render();
         stats.update();
