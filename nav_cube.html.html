@@ -25,7 +25,7 @@
 
     var camera, scene, projector, renderer;
     var cube, wireframeCube, exCube, hover_light;
-    var particle_parameters, particle_hue, particle_size, particle_color, particle_geometry, particle_materials = [];
+    var particle_parameters, particle_geometry, particle_materials = [];
     var particles;
 
     var targetRotation = 0;
@@ -107,8 +107,8 @@
             transparent: true
         }));
 
-        for (var m_i = 0; m_i < 6; m_i++) {
-            materialsC[m_i].opacity = 0.6;
+        for (var mi = 0; mi < 6; mi++) {
+            materialsC[mi].opacity = 0.6;
         }
 
         var cubeMaterial = new THREE.MeshFaceMaterial(materialsC);
@@ -133,6 +133,25 @@
         exCube.rotation = cube.rotation;
         scene.add(exCube);
 
+        if (Detector.webgl) {
+            createParticles(true);
+        } else {
+            createParticles(false);
+        }
+
+        document.addEventListener('mousedown', onDocumentMouseDown, false);
+        document.addEventListener('touchstart', onDocumentTouchStart, false);
+        document.addEventListener('touchmove', onDocumentTouchMove, false);
+        document.addEventListener('mousemove', hoverMove, false);
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function createParticles(isWebGlEnabled) {
+        particle_parameters = [
+            [[1.0, 1.0, 1.0], 5], [[0.95, 1, 1], 4], [[0.90, 1, 1], 3], [[0.85, 1, 1], 2], [[0.80, 1, 1], 1]
+        ];
+        var PI2 = Math.PI * 2;
+
         particle_geometry = new THREE.Geometry();
         for (var p = 0; p < 3000; p++) {
             var vertex = new THREE.Vector3();
@@ -141,29 +160,46 @@
             vertex.z = Math.random() * 2000 - 10;
             particle_geometry.vertices.push(vertex);
         }
-        particle_parameters = [
-            [[1.0, 1.0, 1.0], 5], [[0.95, 1, 1], 4], [[0.90, 1, 1], 3], [[0.85, 1, 1], 2], [[0.80, 1, 1], 1]
-        ];
+
+        var particle_size, particle_color;
         for (var pp = 0; pp < particle_parameters.length; pp++) {
-            particle_size = particle_parameters[pp][1];
-            particle_color = particle_parameters[pp][0];
-            particle_materials[pp] = new THREE.ParticleBasicMaterial({size: particle_size});
-            particle_materials[pp].color.setHSV(particle_color[0], particle_color[1], particle_color[2]);
+            if (isWebGlEnabled) {
+                console.log('Particles creation for WebGL renderer');
+                particle_size = particle_parameters[pp][1];
+                particle_color = particle_parameters[pp][0];
+                particle_materials[pp] = new THREE.ParticleBasicMaterial({size: particle_size});
+                particle_materials[pp].color.setHSV(particle_color[0], particle_color[1], particle_color[2]);
 
-            // console.log('materials[i]: ' + pp + particle_materials[pp]);
-            particles = new THREE.ParticleSystem(particle_geometry, particle_materials[1]);
-            particles.rotation.x = Math.random() * 6;
-            particles.rotation.y = Math.random() * 6;
-            particles.rotation.z = Math.random() * 6;
+                particles = new THREE.ParticleSystem(particle_geometry, particle_materials[pp]);
+                particles.rotation.x = Math.random() * 6;
+                particles.rotation.y = Math.random() * 6;
+                particles.rotation.z = Math.random() * 6;
+                scene.add(particles);
+                console.log('Particles added: ' + particles);
+            } else {
+                var programStroke = function (context) {
+                    context.lineWidth = 0.05;
+                    context.beginPath();
+                    context.arc(0, 0, 1, 0, PI2, true);
+                    context.closePath();
+                    context.stroke();
+                };
 
-            scene.add(particles);
+                for (var i = 0; i < 100; i++) {
+                    var particle = new THREE.Particle(new THREE.ParticleCanvasMaterial({
+                        color: particle_parameters[pp][0],
+                        program: programStroke
+                    }));
+                    particle.position.x = Math.random() * 800 - 400;
+                    particle.position.y = Math.random() * 800 - 400;
+                    particle.position.z = Math.random() * 800 - 400;
+                    particle.scale.x = particle.scale.y = Math.random() * 6 + 2;
+                    particles.push(particle);
+                    scene.add(particles);
+                    console.log('Particles added: ' + particles);
+                }
+            }
         }
-
-        document.addEventListener('mousedown', onDocumentMouseDown, false);
-        document.addEventListener('touchstart', onDocumentTouchStart, false);
-        document.addEventListener('touchmove', onDocumentTouchMove, false);
-        document.addEventListener('mousemove', hoverMove, false);
-        window.addEventListener('resize', onWindowResize, false);
     }
 
     function onWindowResize() {
@@ -285,6 +321,7 @@
     }
 
     function animate() {
+        var particle_color, particle_hue;
         requestAnimationFrame(animate);
         //console.log(cube.rotation.y);
 
