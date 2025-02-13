@@ -2,7 +2,7 @@ WebGL navigational cube proof of concept
 ===
 ![screenshot]  
 Just a little experiment.  
-You could play with it on my [demo page](https://pavel.bz/webgl-navigation-poc).
+You could play with it on my [demo page](https://peekytoe.crabdance.com/webgl-navigation-poc).
 
 NOTES
 ----
